@@ -1,41 +1,42 @@
 #!/bin/bash
-# Run script - starts the Flask/Gunicorn server efficiently
+# Run script - starts the Gunicorn server.
 
-set -e  # Para o script se algo falhar
+set -e  # Exit immediately if a command fails.
 
-# Verifica se um nome de ficheiro foi fornecido
+# Check if a filename was provided
 if [ -z "$1" ]; then
-  echo "Uso: $0 <filename>"
+  echo "Usage: $0 <filename>"
   exit 1
 fi
 
 FILE_TO_SERVE="$1"
 HOST="0.0.0.0"
 PORT="8080"
-WORKERS=4  # Número de processos de trabalho Gunicorn
+WORKERS=4
+# Set a generous timeout (in seconds) for the master process to build the index if needed.
+TIMEOUT=600 
 
-# Verifica se o ficheiro existe
+# Check if the file to be served exists
 if [ ! -f "$FILE_TO_SERVE" ]; then
-  echo "Erro: o ficheiro '$FILE_TO_SERVE' não existe."
+  echo "Error: file '$FILE_TO_SERVE' not found."
   exit 1
 fi
 
-# Verifica se o venv existe, caso contrário cria automaticamente
+# Check if the venv exists, otherwise run the build script
 if [ ! -d "venv" ]; then
-  echo "Virtual environment not found. Creating it..."
-  python3 -m venv venv
+  echo "Virtual environment not found. Running build.sh..."
+  ./build.sh
 fi
 
-# Ativa o ambiente virtual
+# Activate the virtual environment
 echo "Activating virtual environment..."
 source venv/bin/activate
 
-# Garante que o Gunicorn está instalado no ambiente
-if ! python3 -m gunicorn --version >/dev/null 2>&1; then
-  echo "Gunicorn not found, installing..."
-  pip install gunicorn --no-warn-script-location --disable-pip-version-check
-fi
-
-# Inicia o servidor com Gunicorn
+# Start the server with Gunicorn
 echo "Starting Gunicorn server for file '$FILE_TO_SERVE' on $HOST:$PORT..."
-exec gunicorn --workers "$WORKERS" --bind "$HOST:$PORT" "app:create_app('$FILE_TO_SERVE')"
+echo "The index will be built now if it's missing or outdated. This might take a while for large files."
+
+# --preload: Loads the application code in the master process before forking workers.
+#            This ensures the index is built only ONCE.
+# --timeout: Gives the master process enough time to complete the initial indexing.
+exec gunicorn --preload --workers "$WORKERS" --bind "$HOST:$PORT" --timeout "$TIMEOUT" "app:create_app('$FILE_TO_SERVE')"
