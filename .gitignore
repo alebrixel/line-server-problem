@@ -16,3 +16,10 @@ venv/
 # System files
 .DS_Store
 Thumbs.db
+
+# test files
+*dummy.txt
+sample.txt
+
+# index file
+*.txt.index
