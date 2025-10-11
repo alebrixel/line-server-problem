@@ -1,28 +1,42 @@
 #!/bin/bash
-# Build script - creates and prepares a virtual environment efficiently.
+# Build script - creates a virtual environment and installs dependencies.
+# All output is logged to logs/build.log.
 
 set -e # Exit immediately if a command fails.
 
-# If run with the "clean" argument, remove the old venv
-if [ "$1" == "clean" ]; then
-  echo "Cleaning old virtual environment..."
-  rm -rf venv
-fi
+# --- Logging Setup ---
+LOG_DIR="logs"
+LOG_FILE="$LOG_DIR/build.log"
+mkdir -p "$LOG_DIR" # Create the logs directory if it doesn't exist
 
-# Create the virtual environment only if it doesn't exist
-if [ ! -d "venv" ]; then
-  echo "Creating virtual environment..."
-  python3 -m venv venv
-else
-  echo "Virtual environment already exists, skipping creation."
-fi
+# This function will execute the main logic and tee its output to the log file
+main() {
+    # If run with the "clean" argument, remove the old venv
+    if [ "$1" == "clean" ]; then
+      echo "Cleaning old virtual environment..."
+      rm -rf venv
+    fi
 
-# Activate the virtual environment
-echo "Activating virtual environment..."
-source venv/bin/activate
+    # Create the virtual environment only if it doesn't exist
+    if [ ! -d "venv" ]; then
+      echo "Creating virtual environment..."
+      python3 -m venv venv
+    else
+      echo "Virtual environment already exists."
+    fi
 
-# Install dependencies from requirements.txt
-echo "Installing dependencies..."
-pip install -r requirements.txt
+    # Activate the virtual environment
+    echo "Activating virtual environment..."
+    source venv/bin/activate
 
-echo "Build complete."
+    # Install dependencies from requirements.txt
+    echo "Installing dependencies..."
+    pip install -r requirements.txt
+
+    echo "Build complete."
+}
+
+# --- Execution ---
+# Redirects all stdout and stderr from the main function to the tee command.
+# 'tee -a' appends to the log file instead of overwriting it.
+main "$@" | tee -a "$LOG_FILE"
