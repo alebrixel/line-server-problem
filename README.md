@@ -55,19 +55,19 @@ chmod +x build.sh run.sh
 
 The system is built around one main idea: never load the full data file into memory. To get fast random access to any line, it creates an index first.
 
-1. On-Disk Binary Index:
+1. **On-Disk Binary Index:**
    Instead of keeping all line offsets in memory, the server writes them to a binary index file (e.g., dummy.txt.index). Each line’s start position is stored as an 8-byte integer. Memory use stays tiny no matter how big the file is.
 
-2. Memory-Mapped Index:
+2. **Memory-Mapped Index:**
    Workers don’t read the index from disk every time. They use mmap to map it into memory, which is much faster and lets the OS handle caching.
 
-3. Atomic Indexing on Startup:
+3. **Atomic Indexing on Startup:**
    The first time the server runs, it scans the file and builds the index in a temporary file (.tmp). Once done, it atomically renames it with os.replace. On future runs, it checks timestamps and skips rebuilding if the index is still valid, so startup is almost instant.
 
-4. Concurrency and Pre-loading:
+4. **Concurrency and Pre-loading:**
    We run the server with Gunicorn using --preload so indexing happens once in the master process. Workers then map the index file safely with the post_fork hook.
 
-5. Security:
+5. **Security:**
 
 - Path Validation: The server makes sure the file is inside the working directory. Paths like `../../etc/passwd` are rejected.
 - Error Handling: Bad requests (e.g., /lines/abc) get a `400`. Internal errors are logged and return a generic `500` without leaking stack traces.
@@ -159,3 +159,4 @@ With more time, I’d focus on making the system more robust and production-read
 - **Lack of Automated Tests:** No test suite yet. Manual testing works, but proper unit and integration tests would improve reliability and maintainability.
 - **API Design Choice:** Returning HTTP 413 for out-of-bounds lines is non-standard. 404 Not Found would be more conventional.
 - **Logging Configuration:** Logging works but is hardcoded. In production, it should be configurable via environment variables for level and format.
+
