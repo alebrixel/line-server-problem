@@ -219,4 +219,3 @@ def build_index_on_disk(data_path, idx_path):
 
 # Gunicorn will find this 'app' object created by the factory.
 app = create_app()
-# ...existing code...
