@@ -48,7 +48,7 @@ chmod +x build.sh run.sh
 - Step 4: Run the Server
 
 ```
-./run.sh 1M_dummy.txt
+./run.sh dummy.txt
 ```
 
 ## How does your system work?
