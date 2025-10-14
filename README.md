@@ -121,23 +121,23 @@ Building this server was an iterative process of encountering and solving severa
 
 ## What documentation, websites, papers, etc did you consult?
 
-1. Official Documentation (main source of truth):
+### 1. Official Documentation:
 
 - **Python Docs:** os, struct, mmap, logging, and other core modules.
 - **Flask Docs:** setup, routing, and using the g object.
 - **Gunicorn Docs:** process model, worker management, --preload, and post_fork hooks.
 
-2. Tutorials & Guides:
+### 2. Tutorials & Guides:
 
 - **YouTube channels** like ArjanCodes ([link](https://www.youtube.com/watch?v=8a6dWenA8Hs)).
 - Blogs like _Real Python_ and _GeeksForGeeks_ for practical examples and implementation tips.
 
-3. Community Q&A:
+### 3. Community Q&A:
 
 - **Stack Overflow** for troubleshooting specific errors, especially with Gunicorn and shell scripts.
 - **Reddit** communities like _r/learnpython, r/flask, r/Python_ for advice and best practices.
 
-4. AI Tools:
+### 4. AI Tools:
 
 - Used AI assistants to scaffold boilerplate code (like generate_dummy.py), suggest refactors, and debug tricky issues like I/O buffering.
 
@@ -166,5 +166,6 @@ With more time, I’d focus on making the system more robust and production-read
 - **Lack of Automated Tests:** No test suite yet. Manual testing works, but proper unit and integration tests would improve reliability and maintainability.
 - **API Design Choice:** Returning HTTP 413 for out-of-bounds lines is non-standard. 404 Not Found would be more conventional.
 - **Logging Configuration:** Logging works but is hardcoded. In production, it should be configurable via environment variables for level and format.
+
 
 
