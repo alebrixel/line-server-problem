@@ -1,5 +1,4 @@
-# ...existing code...
-# app.py (Final, Corrected Version)
+# app.py
 
 import os
 import sys
