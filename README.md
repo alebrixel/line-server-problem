@@ -69,8 +69,8 @@ The system is built around one main idea: never load the full data file into mem
 
 5. **Security:**
 
-- **Path Validation: **The server makes sure the file is inside the working directory. Paths like `../../etc/passwd` are rejected.
-- **Error Handling: **Bad requests (e.g., /lines/abc) get a `400`. Internal errors are logged and return a generic `500` without leaking stack traces.
+- **Path Validation:** The server makes sure the file is inside the working directory. Paths like `../../etc/passwd` are rejected.
+- **Error Handling:** Bad requests (e.g., /lines/abc) get a `400`. Internal errors are logged and return a generic `500` without leaking stack traces.
 
 ## How will your system perform?
 
