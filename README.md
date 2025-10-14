@@ -51,6 +51,13 @@ chmod +x build.sh run.sh
 ./run.sh dummy.txt
 ```
 
+- Step 5: Send request
+  
+```
+curl -l http://127.0.0.1:8080/<line number>
+curl -l http://127.0.0.1:8080/1
+```
+
 ## How does your system work?
 
 The system is built around one main idea: never load the full data file into memory. To get fast random access to any line, it creates an index first.
@@ -159,4 +166,5 @@ With more time, I’d focus on making the system more robust and production-read
 - **Lack of Automated Tests:** No test suite yet. Manual testing works, but proper unit and integration tests would improve reliability and maintainability.
 - **API Design Choice:** Returning HTTP 413 for out-of-bounds lines is non-standard. 404 Not Found would be more conventional.
 - **Logging Configuration:** Logging works but is hardcoded. In production, it should be configurable via environment variables for level and format.
+
 
