@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Build script - creates a virtual environment and installs dependencies.
 # All output is logged to logs/build.log.
 
@@ -7,65 +7,95 @@ set -e # Exit immediately if a command fails.
 # --- Logging Setup ---
 LOG_DIR="logs"
 LOG_FILE="$LOG_DIR/build.log"
-mkdir -p "$LOG_DIR" # Create the logs directory if it doesn't exist
+mkdir -p "$LOG_DIR"
 
-# --- Check if Python and venv are available ---
-check_venv() {
-    echo "Checking Python and venv availability..."
-
-    if ! command -v python3 &> /dev/null; then
-        echo "Python3 not found. Please install Python 3 and try again."
+# --- Detect Python command ---
+detect_python() {
+    echo "Detectando comando Python..."
+    if command -v python3 &> /dev/null; then
+        PYTHON=python3
+    elif command -v python &> /dev/null; then
+        PYTHON=python
+    elif command -v py &> /dev/null; then
+        PYTHON=py
+    else
+        echo "Python não encontrado. Instale o Python 3 e tente novamente."
         exit 1
     fi
+    echo "Usando interpretador: $($PYTHON --version 2>&1)"
+}
 
-    # Try running the venv module to check if it's available
-    if ! python3 -m venv --help &> /dev/null; then
-        echo "Python venv module not found. Attempting to install it..."
-
-        # Detect OS type for package manager
+# --- Check if venv module is available ---
+check_venv_module() {
+    echo "Verificando módulo venv..."
+    if ! $PYTHON -m venv --help &> /dev/null; then
+        echo "Módulo venv não encontrado. Tentando instalar..."
         if [ -f /etc/debian_version ]; then
             sudo apt update && sudo apt install -y python3-venv
         elif [ -f /etc/redhat-release ]; then
             sudo yum install -y python3-venv
         else
-            echo "Automatic installation not supported on this system. Please install python3-venv manually."
+            echo "Não foi possível instalar automaticamente o módulo venv. Instale manualmente."
             exit 1
         fi
     fi
 }
 
-# --- Main Logic ---
-main() {
-    check_venv
-
-    # If run with the "clean" argument, remove the old venv
-    if [ "$1" == "clean" ]; then
-      echo "Cleaning old virtual environment..."
-      rm -rf venv
-    fi
-
-    # Create the virtual environment only if it doesn't exist
-    if [ ! -d "venv" ]; then
-      echo "Creating virtual environment..."
-      python3 -m venv venv
+# --- Ensure pip exists inside venv ---
+ensure_pip_in_venv() {
+    echo "Verificando se o pip está disponível..."
+    if [ -f "venv/bin/python" ]; then
+        VENV_PYTHON="venv/bin/python"
+    elif [ -f "venv/Scripts/python.exe" ]; then
+        VENV_PYTHON="venv/Scripts/python.exe"
     else
-      echo "Virtual environment already exists."
+        echo "Erro: não foi possível localizar o Python dentro do venv."
+        exit 1
     fi
 
-    # Activate the virtual environment
-    echo "Activating virtual environment..."
-    source venv/bin/activate
-
-    # Upgrade pip to avoid install issues
-    echo "Upgrading pip..."
-    pip install --upgrade pip
-
-    # Install dependencies from requirements.txt
-    echo "Installing dependencies..."
-    pip install -r requirements.txt
-
-    echo "Build complete."
+    if ! $VENV_PYTHON -m pip --version &> /dev/null; then
+        echo "pip não encontrado dentro do venv. Instalando com ensurepip..."
+        $VENV_PYTHON -m ensurepip --upgrade
+    fi
 }
 
-# --- Execution ---
+# --- Main Logic ---
+main() {
+    detect_python
+    check_venv_module
+
+    if [ "$1" == "clean" ]; then
+        echo "Limpando ambiente virtual antigo..."
+        rm -rf venv
+    fi
+
+    if [ ! -d "venv" ]; then
+        echo "Criando ambiente virtual..."
+        $PYTHON -m venv venv
+    else
+        echo "Ambiente virtual já existe."
+    fi
+
+    echo "Ativando ambiente virtual..."
+    if [ -f "venv/Scripts/activate" ]; then
+        source venv/Scripts/activate  # Windows
+    else
+        source venv/bin/activate      # Linux / WSL
+    fi
+
+    ensure_pip_in_venv
+
+    echo "Atualizando pip..."
+    pip install --upgrade pip
+
+    if [ -f "requirements.txt" ]; then
+        echo "Instalando dependências..."
+        pip install -r requirements.txt
+    else
+        echo "Aviso: arquivo requirements.txt não encontrado. Pulando instalação."
+    fi
+
+    echo "Build concluído com sucesso."
+}
+
 main "$@" | tee -a "$LOG_FILE"
